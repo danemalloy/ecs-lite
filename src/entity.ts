@@ -51,6 +51,14 @@ export class EntityManager {
 	}
 
 	/**
+	 * Gets the current number of active entities
+	 * @returns The number of active entities
+	 */
+	public getEntityCount(): number {
+		return this.entities.size();
+	}
+
+	/**
 	 * Clears all entities and resets the manager
 	 */
 	clear(): void {
