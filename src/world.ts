@@ -1,10 +1,12 @@
 import { Entity, Component, ComponentClass, ComponentQuest } from "./types";
 import { EntityManager } from "./entity";
 import { ComponentManager } from "./component";
+import { System, SystemManager } from "./system";
 
 export class World {
 	private entityManager: EntityManager = new EntityManager();
 	private componentManager: ComponentManager = new ComponentManager();
+	private systemManager: SystemManager = new SystemManager();
 
 	/**
 	 * Creates a new entity
@@ -89,5 +91,70 @@ export class World {
 	 */
 	getEntitiesWithComponents(componentClasses: ComponentQuest): Entity[] {
 		return this.componentManager.getEntitiesWithComponents(componentClasses);
+	}
+
+	/**
+	 * Adds a system to the world
+	 * @param system The system to add
+	 * @returns The world instance for method chaining
+	 */
+	addSystem(system: System): World {
+		this.systemManager.addSystem(system, this);
+		return this;
+	}
+
+	/**
+	 * Removes a system from the world
+	 * @param system The system to remove
+	 * @returns The world instance for method chaining
+	 */
+	removeSystem(system: System): World {
+		this.systemManager.removeSystem(system, this);
+		return this;
+	}
+
+	/**
+	 * Checks if a system is registered in the world
+	 * @param system The system to check
+	 * @returns True if the system is registered, false otherwise
+	 */
+	hasSystem(system: System): boolean {
+		return this.systemManager.hasSystem(system);
+	}
+
+	/**
+	 * Gets all registered systems
+	 * @returns A copy of the systems array
+	 */
+	getSystems(): System[] {
+		return this.systemManager.getSystems();
+	}
+
+	/**
+	 * Updates all systems in the world
+	 * Call this every frame from your main game loop
+	 * @param deltaTime Time elapsed since the last update (in seconds)
+	 */
+	update(deltaTime: number): void {
+		this.systemManager.updateSystems(this, deltaTime);
+	}
+
+	/**
+	 * Fixed updates all systems in the world
+	 * Call this at a fixed interval for physics and other time-critical updates
+	 * @param fixedDeltaTime Fixed time step (usually 1/60 seconds)
+	 */
+	fixedUpdate(fixedDeltaTime: number): void {
+		this.systemManager.fixedUpdateSystems(this, fixedDeltaTime);
+	}
+
+	/**
+	 * Clears the world by removing all entities, components, and systems
+	 */
+	clear(): void {
+		this.systemManager.clear(this);
+
+		this.componentManager = new ComponentManager();
+		this.entityManager.clear();
 	}
 }
