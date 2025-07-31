@@ -5,7 +5,7 @@ export interface Component {
 }
 
 export type ComponentClass<T extends Component = Component> = new (...args: never[]) => T;
-export type ComponentQuery = readonly ComponentClass[];
+export type ComponentQuery = ComponentClass[];
 
 export type ComponentId = number;
 
