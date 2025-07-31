@@ -109,7 +109,8 @@ export class ComponentManager {
 	 * @param component The component instance to add
 	 */
 	addComponent<T extends Component>(entity: Entity, component: T): void {
-		const componentId = this.getComponentId(component.constructor as ComponentClass<T>);
+		const componentClass = component.constructor as ComponentClass<T>;
+		const componentId = this.getComponentId(componentClass);
 		const currentArchetype = this.entityToArchetype.get(entity);
 
 		if (currentArchetype) {
@@ -243,7 +244,7 @@ export class ComponentManager {
 		const componentId = this.getComponentId(componentClass);
 		const entities: Entity[] = [];
 
-		for (const archetype of this.archetypes.values()) {
+		for (const [, archetype] of this.archetypes) {
 			if (archetype.componentArrays.has(componentId)) {
 				entities.push(...archetype.entities);
 			}
@@ -257,7 +258,7 @@ export class ComponentManager {
 	 * @param componentClasses Array of component classes to match
 	 * @returns An array of entities that have all the specified components
 	 */
-	getEntitiesWithComponents(componentClasses: readonly ComponentClass[]): Entity[] {
+	getEntitiesWithComponents(componentClasses: ComponentClass[]): Entity[] {
 		if (componentClasses.size() === 0) return [];
 
 		const componentIds = componentClasses.map((cls) => this.getComponentId(cls)).sort((a, b) => a - b);
@@ -289,7 +290,7 @@ export class ComponentManager {
 		cache.entities.clear();
 		cache.archetypes.clear();
 
-		for (const archetype of this.archetypes.values()) {
+		for (const [, archetype] of this.archetypes) {
 			const hasAllComponents = cache.signature.every((componentId) => archetype.componentArrays.has(componentId));
 
 			if (hasAllComponents) {
@@ -305,7 +306,7 @@ export class ComponentManager {
 	 * Invalidates all query caches
 	 */
 	private invalidateQueryCaches(): void {
-		for (const cache of this.queryCache.values()) {
+		for (const [, cache] of this.queryCache) {
 			cache.needsUpdate = true;
 		}
 	}
@@ -317,7 +318,7 @@ export class ComponentManager {
 	 * @returns Map from entity to component
 	 */
 	getComponentsForEntities<T extends Component>(
-		entities: readonly Entity[],
+		entities: Entity[],
 		componentClass: ComponentClass<T>,
 	): Map<Entity, T> {
 		const result = new Map<Entity, T>();

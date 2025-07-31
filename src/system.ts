@@ -66,7 +66,7 @@ export class SystemManager {
 		}
 
 		const index = this.systems.indexOf(system);
-		if (index === -1) {
+		if (index !== -1) {
 			this.systems.unorderedRemove(index);
 		}
 
@@ -114,7 +114,7 @@ export class SystemManager {
 	 * @param world The world to pass to the systems
 	 * @param fixedDeltaTime Fixed time step
 	 */
-	public fixedUpdateSystems(world: World, fixedDeltaTime: number): void {
+	fixedUpdateSystems(world: World, fixedDeltaTime: number): void {
 		for (const system of this.systems) {
 			if (system.fixedUpdate) {
 				system.fixedUpdate(world, fixedDeltaTime);
@@ -126,7 +126,7 @@ export class SystemManager {
 	 * Removes all systems from the manager
 	 * @param world The world to pass to each system's onRemoved method
 	 */
-	public clear(world: World): void {
+	clear(world: World): void {
 		for (const system of this.systems) {
 			if (system.onRemoved) {
 				system.onRemoved(world);

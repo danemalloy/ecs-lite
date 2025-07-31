@@ -1,4 +1,4 @@
-import { Entity, Component, ComponentClass, ComponentQuest } from "./types";
+import { Entity, Component, ComponentClass } from "./types";
 import { EntityManager } from "./entity";
 import { ComponentManager } from "./component";
 import { System, SystemManager } from "./system";
@@ -39,7 +39,7 @@ export class World {
 	 * @param component The component instance to add
 	 * @returns The world instance for method chaining
 	 */
-	addComponent<T extends Component>(entity: Entity, component: T): World {
+	addComponent<T extends Component>(entity: Entity, component: T): this {
 		this.componentManager.addComponent(entity, component);
 		return this;
 	}
@@ -70,7 +70,7 @@ export class World {
 	 * @param componentClass The class of the component to remove
 	 * @returns The world instance for method chaining
 	 */
-	removeComponent<T extends Component>(entity: Entity, componentClass: ComponentClass<T>): World {
+	removeComponent<T extends Component>(entity: Entity, componentClass: ComponentClass<T>): this {
 		this.componentManager.removeComponent(entity, componentClass);
 		return this;
 	}
@@ -86,11 +86,24 @@ export class World {
 
 	/**
 	 * Gets all entities that have all of the specified components
-	 * @param componentClasses Array of component classes to match (ComponentQuest)
+	 * @param componentClasses Array of component classes to match
 	 * @returns An array of entities that have all the specified components
 	 */
-	getEntitiesWithComponents(componentClasses: ComponentQuest): Entity[] {
+	getEntitiesWithComponents(componentClasses: ComponentClass[]): Entity[] {
 		return this.componentManager.getEntitiesWithComponents(componentClasses);
+	}
+
+	/**
+	 * Gets components for multiple entities efficiently
+	 * @param entities Array of entities to process
+	 * @param componentClass The component class to retrieve
+	 * @returns Map from entity to component
+	 */
+	getComponentsForEntities<T extends Component>(
+		entities: Entity[],
+		componentClass: ComponentClass<T>,
+	): Map<Entity, T> {
+		return this.componentManager.getComponentsForEntities(entities, componentClass);
 	}
 
 	/**
@@ -98,7 +111,7 @@ export class World {
 	 * @param system The system to add
 	 * @returns The world instance for method chaining
 	 */
-	addSystem(system: System): World {
+	addSystem(system: System): this {
 		this.systemManager.addSystem(system, this);
 		return this;
 	}
@@ -108,7 +121,7 @@ export class World {
 	 * @param system The system to remove
 	 * @returns The world instance for method chaining
 	 */
-	removeSystem(system: System): World {
+	removeSystem(system: System): this {
 		this.systemManager.removeSystem(system, this);
 		return this;
 	}
@@ -126,7 +139,7 @@ export class World {
 	 * Gets all registered systems
 	 * @returns A copy of the systems array
 	 */
-	getSystems(): System[] {
+	getSystems(): readonly System[] {
 		return this.systemManager.getSystems();
 	}
 
@@ -153,7 +166,6 @@ export class World {
 	 */
 	clear(): void {
 		this.systemManager.clear(this);
-
 		this.componentManager = new ComponentManager();
 		this.entityManager.clear();
 	}
