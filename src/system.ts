@@ -67,7 +67,7 @@ export class SystemManager {
 
 		const index = this.systems.indexOf(system);
 		if (index !== -1) {
-			this.systems.unorderedRemove(index);
+			this.systems.remove(index);
 		}
 
 		this.systemsMap.delete(system);
@@ -93,7 +93,11 @@ export class SystemManager {
 	 * @returns A copy of the systems array
 	 */
 	getSystems(): System[] {
-		return [...this.systems];
+		const result: System[] = [];
+		for (const system of this.systems) {
+			result.push(system);
+		}
+		return result;
 	}
 
 	/**

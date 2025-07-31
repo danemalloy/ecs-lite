@@ -246,7 +246,9 @@ export class ComponentManager {
 
 		for (const [, archetype] of this.archetypes) {
 			if (archetype.componentArrays.has(componentId)) {
-				entities.push(...archetype.entities);
+				for (const entity of archetype.entities) {
+					entities.push(entity);
+				}
 			}
 		}
 
@@ -279,7 +281,11 @@ export class ComponentManager {
 			this.updateQueryCache(cache);
 		}
 
-		return [...cache.entities];
+		const result: Entity[] = [];
+		for (const entity of cache.entities) {
+			result.push(entity);
+		}
+		return result;
 	}
 
 	/**
@@ -295,7 +301,9 @@ export class ComponentManager {
 
 			if (hasAllComponents) {
 				cache.archetypes.add(archetype);
-				cache.entities.push(...archetype.entities);
+				for (const entity of archetype.entities) {
+					cache.entities.push(entity);
+				}
 			}
 		}
 
