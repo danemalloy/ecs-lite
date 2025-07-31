@@ -49,7 +49,7 @@ export class SystemManager {
 		this.systems.push(system);
 		this.systemsMap.set(system, true);
 
-		if (system.onAdded) {
+		if (system.onAdded !== undefined) {
 			system.onAdded(world);
 		}
 	}
@@ -72,7 +72,7 @@ export class SystemManager {
 
 		this.systemsMap.delete(system);
 
-		if (system.onRemoved) {
+		if (system.onRemoved !== undefined) {
 			system.onRemoved(world);
 		}
 
@@ -107,7 +107,7 @@ export class SystemManager {
 	 */
 	updateSystems(world: World, deltaTime: number): void {
 		for (const system of this.systems) {
-			if (system.update) {
+			if (system.update !== undefined) {
 				system.update(world, deltaTime);
 			}
 		}
@@ -120,7 +120,7 @@ export class SystemManager {
 	 */
 	fixedUpdateSystems(world: World, fixedDeltaTime: number): void {
 		for (const system of this.systems) {
-			if (system.fixedUpdate) {
+			if (system.fixedUpdate !== undefined) {
 				system.fixedUpdate(world, fixedDeltaTime);
 			}
 		}
@@ -132,7 +132,7 @@ export class SystemManager {
 	 */
 	clear(world: World): void {
 		for (const system of this.systems) {
-			if (system.onRemoved) {
+			if (system.onRemoved !== undefined) {
 				system.onRemoved(world);
 			}
 		}
