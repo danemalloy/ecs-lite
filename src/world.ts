@@ -36,11 +36,12 @@ export class World {
 	/**
 	 * Adds a component to an entity
 	 * @param entity The entity to add the component to
+	 * @param componentClass The class of the component to add
 	 * @param component The component instance to add
 	 * @returns The world instance for method chaining
 	 */
-	addComponent<T extends Component>(entity: Entity, component: T): this {
-		this.componentManager.addComponent(entity, component);
+	addComponent<T extends Component>(entity: Entity, componentClass: ComponentClass<T>, component: T): this {
+		this.componentManager.addComponent(entity, componentClass, component);
 		return this;
 	}
 

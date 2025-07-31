@@ -106,10 +106,10 @@ export class ComponentManager {
 	/**
 	 * Adds a component to an entity
 	 * @param entity The entity to add the component to
+	 * @param componentClass The class of the component to add
 	 * @param component The component instance to add
 	 */
-	addComponent<T extends Component>(entity: Entity, component: T): void {
-		const componentClass = component.constructor as ComponentClass<T>;
+	addComponent<T extends Component>(entity: Entity, componentClass: ComponentClass<T>, component: T): void {
 		const componentId = this.getComponentId(componentClass);
 		const currentArchetype = this.entityToArchetype.get(entity);
 
@@ -121,7 +121,7 @@ export class ComponentManager {
 				return;
 			}
 
-			const newSignature = [...currentArchetype.signature, componentId].sort((a, b) => a - b);
+			const newSignature = [...currentArchetype.signature, componentId].sort((a, b) => a < b);
 			const newArchetype = this.getOrCreateArchetype(newSignature);
 
 			this.moveEntity(entity, currentArchetype, newArchetype);
@@ -261,7 +261,7 @@ export class ComponentManager {
 	getEntitiesWithComponents(componentClasses: ComponentClass[]): Entity[] {
 		if (componentClasses.size() === 0) return [];
 
-		const componentIds = componentClasses.map((cls) => this.getComponentId(cls)).sort((a, b) => a - b);
+		const componentIds = componentClasses.map((cls) => this.getComponentId(cls)).sort((a, b) => a < b);
 		const cacheKey = this.createSignature(componentIds);
 
 		let cache = this.queryCache.get(cacheKey);
