@@ -10,7 +10,6 @@ export class World {
 
 	/**
 	 * Creates a new entity
-	 * @returns A new entity ID
 	 */
 	createEntity(): Entity {
 		return this.entityManager.createEntity();
@@ -18,7 +17,6 @@ export class World {
 
 	/**
 	 * Destroys an entity and removes all its components
-	 * @param entity The entity to destroy
 	 */
 	destroyEntity(entity: Entity): void {
 		this.componentManager.removeAllComponents(entity);
@@ -27,18 +25,25 @@ export class World {
 
 	/**
 	 * Gets the total number of active entities
-	 * @returns The number of active entities
 	 */
 	getEntityCount(): number {
 		return this.entityManager.getEntityCount();
 	}
 
 	/**
+	 * Batch operations for better performance
+	 */
+	batch(operations: () => void): void {
+		this.componentManager.startBatch();
+		try {
+			operations();
+		} finally {
+			this.componentManager.endBatch();
+		}
+	}
+
+	/**
 	 * Adds a component to an entity
-	 * @param entity The entity to add the component to
-	 * @param componentClass The class of the component to add
-	 * @param component The component instance to add
-	 * @returns The world instance for method chaining
 	 */
 	addComponent<T extends Component>(entity: Entity, componentClass: ComponentClass<T>, component: T): this {
 		this.componentManager.addComponent(entity, componentClass, component);
@@ -46,10 +51,19 @@ export class World {
 	}
 
 	/**
+	 * Adds multiple components to an entity efficiently
+	 */
+	addComponents(entity: Entity, components: Array<{ class: ComponentClass; component: Component }>): this {
+		this.batch(() => {
+			for (const { class: componentClass, component } of components) {
+				this.componentManager.addComponent(entity, componentClass, component);
+			}
+		});
+		return this;
+	}
+
+	/**
 	 * Gets a component from an entity
-	 * @param entity The entity to get the component from
-	 * @param componentClass The class of the component to retrieve
-	 * @returns The component instance, or undefined if not found
 	 */
 	getComponent<T extends Component>(entity: Entity, componentClass: ComponentClass<T>): T | undefined {
 		return this.componentManager.getComponent(entity, componentClass);
@@ -57,19 +71,25 @@ export class World {
 
 	/**
 	 * Checks if an entity has a specific component
-	 * @param entity The entity to check
-	 * @param componentClass The component class to check for
-	 * @returns True if the entity has the component, false otherwise
 	 */
 	hasComponent<T extends Component>(entity: Entity, componentClass: ComponentClass<T>): boolean {
 		return this.componentManager.hasComponent(entity, componentClass);
 	}
 
 	/**
+	 * Checks if an entity has all specified components
+	 */
+	hasComponents(entity: Entity, componentClasses: ComponentClass[]): boolean {
+		for (const componentClass of componentClasses) {
+			if (!this.componentManager.hasComponent(entity, componentClass)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
 	 * Removes a component from an entity
-	 * @param entity The entity to remove the component from
-	 * @param componentClass The class of the component to remove
-	 * @returns The world instance for method chaining
 	 */
 	removeComponent<T extends Component>(entity: Entity, componentClass: ComponentClass<T>): this {
 		this.componentManager.removeComponent(entity, componentClass);
@@ -77,9 +97,19 @@ export class World {
 	}
 
 	/**
+	 * Removes multiple components from an entity efficiently
+	 */
+	removeComponents(entity: Entity, componentClasses: ComponentClass[]): this {
+		this.batch(() => {
+			for (const componentClass of componentClasses) {
+				this.componentManager.removeComponent(entity, componentClass);
+			}
+		});
+		return this;
+	}
+
+	/**
 	 * Gets all entities that have a specific component
-	 * @param componentClass The component class to search for
-	 * @returns An array of entities that have the component
 	 */
 	getEntitiesWithComponent<T extends Component>(componentClass: ComponentClass<T>): Entity[] {
 		return this.componentManager.getEntitiesWithComponent(componentClass);
@@ -87,8 +117,6 @@ export class World {
 
 	/**
 	 * Gets all entities that have all of the specified components
-	 * @param componentClasses Array of component classes to match
-	 * @returns An array of entities that have all the specified components
 	 */
 	getEntitiesWithComponents(componentClasses: ComponentClass[]): Entity[] {
 		return this.componentManager.getEntitiesWithComponents(componentClasses);
@@ -96,9 +124,6 @@ export class World {
 
 	/**
 	 * Gets components for multiple entities efficiently
-	 * @param entities Array of entities to process
-	 * @param componentClass The component class to retrieve
-	 * @returns Map from entity to component
 	 */
 	getComponentsForEntities<T extends Component>(
 		entities: Entity[],
@@ -108,9 +133,14 @@ export class World {
 	}
 
 	/**
+	 * Advanced query builder for complex queries
+	 */
+	query(...componentClasses: ComponentClass[]): QueryBuilder {
+		return new QueryBuilder(this, componentClasses);
+	}
+
+	/**
 	 * Adds a system to the world
-	 * @param system The system to add
-	 * @returns The world instance for method chaining
 	 */
 	addSystem(system: System): this {
 		this.systemManager.addSystem(system, this);
@@ -119,8 +149,6 @@ export class World {
 
 	/**
 	 * Removes a system from the world
-	 * @param system The system to remove
-	 * @returns The world instance for method chaining
 	 */
 	removeSystem(system: System): this {
 		this.systemManager.removeSystem(system, this);
@@ -129,8 +157,6 @@ export class World {
 
 	/**
 	 * Checks if a system is registered in the world
-	 * @param system The system to check
-	 * @returns True if the system is registered, false otherwise
 	 */
 	hasSystem(system: System): boolean {
 		return this.systemManager.hasSystem(system);
@@ -138,7 +164,6 @@ export class World {
 
 	/**
 	 * Gets all registered systems
-	 * @returns A copy of the systems array
 	 */
 	getSystems(): readonly System[] {
 		return this.systemManager.getSystems();
@@ -146,8 +171,6 @@ export class World {
 
 	/**
 	 * Updates all systems in the world
-	 * Call this every frame from your main game loop
-	 * @param deltaTime Time elapsed since the last update (in seconds)
 	 */
 	update(deltaTime: number): void {
 		this.systemManager.updateSystems(this, deltaTime);
@@ -155,8 +178,6 @@ export class World {
 
 	/**
 	 * Fixed updates all systems in the world
-	 * Call this at a fixed interval for physics and other time-critical updates
-	 * @param fixedDeltaTime Fixed time step (usually 1/60 seconds)
 	 */
 	fixedUpdate(fixedDeltaTime: number): void {
 		this.systemManager.fixedUpdateSystems(this, fixedDeltaTime);
@@ -169,5 +190,122 @@ export class World {
 		this.systemManager.clear(this);
 		this.componentManager = new ComponentManager();
 		this.entityManager.clear();
+	}
+
+	/**
+	 * Get performance statistics
+	 */
+	getStats(): {
+		entities: number;
+		archetypes: number;
+		cachedQueries: number;
+		componentTypes: number;
+		systems: number;
+	} {
+		const componentStats = this.componentManager.getStats();
+		return {
+			...componentStats,
+			systems: this.systemManager.getSystems().size(),
+		};
+	}
+
+	/**
+	 * Clear query cache for memory management
+	 */
+	clearQueryCache(): void {
+		this.componentManager.clearQueryCache();
+	}
+}
+
+/**
+ * Advanced query builder for fluent API
+ */
+class QueryBuilder {
+	private componentClasses: ComponentClass[];
+
+	constructor(
+		private world: World,
+		componentClasses: ComponentClass[],
+	) {
+		this.componentClasses = componentClasses;
+	}
+
+	/**
+	 * Execute the query and return entities
+	 */
+	entities(): Entity[] {
+		return this.world.getEntitiesWithComponents(this.componentClasses);
+	}
+
+	/**
+	 * Execute query and iterate with components
+	 */
+	forEach(callback: (entity: Entity, components: Component[]) => void): void {
+		const entities = this.entities();
+
+		for (const entity of entities) {
+			const components: Component[] = [];
+			for (const componentClass of this.componentClasses) {
+				const component = this.world.getComponent(entity, componentClass);
+				if (component) {
+					components.push(component);
+				}
+			}
+
+			if (components.size() === this.componentClasses.size()) {
+				callback(entity, components);
+			}
+		}
+	}
+
+	/**
+	 * Execute query and iterate with typed components (up to 4 components)
+	 */
+	forEachTyped<
+		T1 extends Component,
+		T2 extends Component = never,
+		T3 extends Component = never,
+		T4 extends Component = never,
+	>(callback: (entity: Entity, c1: T1, c2?: T2, c3?: T3, c4?: T4) => void): void {
+		const entities = this.entities();
+
+		for (const entity of entities) {
+			const c1 = this.world.getComponent(entity, this.componentClasses[0] as ComponentClass<T1>);
+			const c2 = this.componentClasses[1]
+				? this.world.getComponent(entity, this.componentClasses[1] as ComponentClass<T2>)
+				: undefined;
+			const c3 = this.componentClasses[2]
+				? this.world.getComponent(entity, this.componentClasses[2] as ComponentClass<T3>)
+				: undefined;
+			const c4 = this.componentClasses[3]
+				? this.world.getComponent(entity, this.componentClasses[3] as ComponentClass<T4>)
+				: undefined;
+
+			if (c1) {
+				callback(entity, c1, c2, c3, c4);
+			}
+		}
+	}
+
+	/**
+	 * Count entities matching the query
+	 */
+	count(): number {
+		return this.entities().size();
+	}
+
+	/**
+	 * Check if any entities match the query
+	 */
+	any(): boolean {
+		return this.count() > 0;
+	}
+
+	/**
+	 * Get the first entity matching the query
+	 */
+	first(): Entity | undefined {
+		const entities = this.entities();
+		return entities.size() > 0 ? entities[0] : undefined;
 	}
 }
